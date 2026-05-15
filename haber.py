@@ -51,9 +51,6 @@ def get_latest_news_once():
         if title.startswith("-"):
             continue
 
-        if "Müsabaka Görevlileri Açıklandı" not in title:
-            continue
-
         try:
             news_id = int(query["ftxtID"][0])
         except ValueError:
