@@ -7,6 +7,7 @@ from collections import Counter
 
 import requests
 from bs4 import BeautifulSoup
+from plyer import notification
 
 
 LIST_URL = "https://www.tff.org/default.aspx?pageID=248"
@@ -21,6 +22,18 @@ HEADERS = {
     "Cache-Control": "no-cache",
     "Pragma": "no-cache",
 }
+
+
+def show_desktop_notification(title, message):
+    try:
+        notification.notify(
+            title=title,
+            message=message,
+            app_name="TFF Hakem Haber Takip",
+            timeout=10
+        )
+    except Exception as e:
+        print(f"Bildirim gösterilemedi: {e}")
 
 
 def get_latest_news_once():
@@ -95,7 +108,6 @@ def get_latest_news():
         raise RuntimeError("5 kontrolün hiçbirinde haber alınamadı.")
 
     id_counts = Counter(news["id"] for news in results)
-
     most_common_count = id_counts.most_common(1)[0][1]
 
     majority_ids = [
@@ -142,6 +154,11 @@ def save_latest(news):
 def main():
     print("TFF hakem haberleri takip ediliyor...")
 
+    show_desktop_notification(
+        "TFF Hakem Haber Takip",
+        "Takip sistemi başlatıldı."
+    )
+
     last_id = load_last_id()
 
     while True:
@@ -151,12 +168,23 @@ def main():
             if last_id is None:
                 last_id = latest["id"]
                 save_latest(latest)
+
                 print(f"İlk kayıt: {latest['title']}")
                 print(latest["url"])
+
+                show_desktop_notification(
+                    "TFF Hakem Haber Takip",
+                    f"İlk haber kaydedildi: {latest['title']}"
+                )
 
             elif latest["id"] != last_id:
                 print(f"Yeni haber bulundu: {latest['title']}")
                 print(latest["url"])
+
+                show_desktop_notification(
+                    "Yeni TFF hakem haberi",
+                    latest["title"]
+                )
 
                 webbrowser.open_new_tab(latest["url"])
 
@@ -168,6 +196,11 @@ def main():
 
         except Exception as e:
             print(f"Hata: {e}")
+
+            show_desktop_notification(
+                "TFF Hakem Haber Takip - Hata",
+                str(e)
+            )
 
         time.sleep(CHECK_EVERY_SECONDS)
 
