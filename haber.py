@@ -6,6 +6,7 @@ from urllib.parse import urljoin, urlparse, parse_qs
 from collections import Counter
 
 import requests
+import urllib3
 from bs4 import BeautifulSoup
 from plyer import notification
 
@@ -17,11 +18,16 @@ STATE_FILE = Path("tff_hakem_son_haber.json")
 REFRESH_COUNT = 5
 REFRESH_DELAY_SECONDS = 2
 
+VERIFY_SSL = False
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; TFF-Haber-Takip/1.0)",
     "Cache-Control": "no-cache",
     "Pragma": "no-cache",
 }
+
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def show_desktop_notification(title, message):
@@ -37,7 +43,12 @@ def show_desktop_notification(title, message):
 
 
 def get_latest_news_once():
-    response = requests.get(LIST_URL, headers=HEADERS, timeout=20)
+    response = requests.get(
+        LIST_URL,
+        headers=HEADERS,
+        timeout=20,
+        verify=VERIFY_SSL
+    )
     response.raise_for_status()
 
     response.encoding = "windows-1254"
@@ -105,7 +116,7 @@ def get_latest_news():
             time.sleep(REFRESH_DELAY_SECONDS)
 
     if not results:
-        raise RuntimeError("5 kontrolün hiçbirinde haber alınamadı.")
+        raise RuntimeError(f"{REFRESH_COUNT} kontrolün hiçbirinde haber alınamadı.")
 
     id_counts = Counter(news["id"] for news in results)
     most_common_count = id_counts.most_common(1)[0][1]
@@ -122,7 +133,6 @@ def get_latest_news():
         if news["id"] in majority_ids
     ]
 
-    # Eşitlik varsa ftxtID büyük olanı seç
     selected = max(candidates, key=lambda x: int(x["id"]))
 
     print(
@@ -193,6 +203,10 @@ def main():
 
             else:
                 print(f"Yeni haber yok. Son haber: {latest['title']}")
+
+        except KeyboardInterrupt:
+            print("\nProgram durduruldu.")
+            break
 
         except Exception as e:
             print(f"Hata: {e}")
