@@ -26,8 +26,36 @@ HEADERS = {
     "Pragma": "no-cache",
 }
 
+BOT_TOKEN = "8880473499:AAF11IN4oGA2XiX4scfGivITtc5IpwQyPw0"
+CHAT_ID = "905046010"
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+def send_telegram_message(title, message, url=None):
+    if not BOT_TOKEN or not CHAT_ID:
+        print("Telegram token veya chat_id tanımlı değil.")
+        return
+
+    text = f"📰 {title}\n\n{message}"
+
+    if url:
+        text += f"\n\n{url}"
+
+    try:
+        response = requests.post(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+            json={
+                "chat_id": CHAT_ID,
+                "text": text,
+                "disable_web_page_preview": False
+            },
+            timeout=10
+        )
+        response.raise_for_status()
+
+    except Exception as e:
+        print(f"Telegram mesajı gönderilemedi: {e}")
 
 
 def show_desktop_notification(title, message):
@@ -187,6 +215,14 @@ def main():
                     f"İlk haber kaydedildi: {latest['title']}"
                 )
 
+                webbrowser.open_new_tab(latest["url"])
+                
+                send_telegram_message(
+                    "Yeni TFF hakem haberi",
+                    latest["title"],
+                    latest["url"]
+                )
+
             elif latest["id"] != last_id:
                 print(f"Yeni haber bulundu: {latest['title']}")
                 print(latest["url"])
@@ -197,9 +233,16 @@ def main():
                 )
 
                 webbrowser.open_new_tab(latest["url"])
+                
+                send_telegram_message(
+                    "Yeni TFF hakem haberi",
+                    latest["title"],
+                    latest["url"]
+                )
 
                 last_id = latest["id"]
                 save_latest(latest)
+
 
             else:
                 print(f"Yeni haber yok. Son haber: {latest['title']}")
