@@ -9,6 +9,7 @@ import requests
 import urllib3
 from bs4 import BeautifulSoup
 from plyer import notification
+from datetime import datetime
 
 
 LIST_URL = "https://www.tff.org/default.aspx?pageID=248"
@@ -26,15 +27,23 @@ HEADERS = {
     "Pragma": "no-cache",
 }
 
-BOT_TOKEN = "8880473499:AAF11IN4oGA2XiX4scfGivITtc5IpwQyPw0"
+BOT_TOKEN = "8880473499:AAHsggBlqCmb6ySX8abSYqd35jkpIXY33yU"
 CHAT_ID = "905046010"
-
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
+def now_text():
+    return datetime.now().strftime("%d.%m.%Y-%H:%M")
+
+
+def log(message):
+    print(f"{now_text()} {message}")
+
+
 def send_telegram_message(title, message, url=None):
     if not BOT_TOKEN or not CHAT_ID:
-        print("Telegram token veya chat_id tanımlı değil.")
+        log("Telegram token veya chat_id tanımlı değil.")
         return
 
     text = f"📰 {title}\n\n{message}"
@@ -55,7 +64,7 @@ def send_telegram_message(title, message, url=None):
         response.raise_for_status()
 
     except Exception as e:
-        print(f"Telegram mesajı gönderilemedi: {e}")
+        log(f"Telegram mesajı gönderilemedi: {e}")
 
 
 def show_desktop_notification(title, message):
@@ -67,7 +76,7 @@ def show_desktop_notification(title, message):
             timeout=10
         )
     except Exception as e:
-        print(f"Bildirim gösterilemedi: {e}")
+        log(f"Bildirim gösterilemedi: {e}")
 
 
 def get_latest_news_once():
@@ -132,13 +141,13 @@ def get_latest_news():
             news = get_latest_news_once()
             results.append(news)
 
-            print(
+            log(
                 f"Kontrol {i + 1}/{REFRESH_COUNT}: "
                 f"{news['title']} - {news['id']}"
             )
 
         except Exception as e:
-            print(f"Kontrol {i + 1}/{REFRESH_COUNT} hatası: {e}")
+            log(f"Kontrol {i + 1}/{REFRESH_COUNT} hatası: {e}")
 
         if i < REFRESH_COUNT - 1:
             time.sleep(REFRESH_DELAY_SECONDS)
@@ -163,7 +172,7 @@ def get_latest_news():
 
     selected = max(candidates, key=lambda x: int(x["id"]))
 
-    print(
+    log(
         f"Seçilen çoğunluk haber: {selected['title']} "
         f"({id_counts[selected['id']]}/{REFRESH_COUNT})"
     )
@@ -190,7 +199,7 @@ def save_latest(news):
 
 
 def main():
-    print("TFF hakem haberleri takip ediliyor...")
+    log("TFF hakem haberleri takip ediliyor...")
 
     show_desktop_notification(
         "TFF Hakem Haber Takip",
@@ -207,8 +216,8 @@ def main():
                 last_id = latest["id"]
                 save_latest(latest)
 
-                print(f"İlk kayıt: {latest['title']}")
-                print(latest["url"])
+                log(f"İlk kayıt: {latest['title']}")
+                log(latest["url"])
 
                 show_desktop_notification(
                     "TFF Hakem Haber Takip",
@@ -224,8 +233,8 @@ def main():
                 )
 
             elif latest["id"] != last_id:
-                print(f"Yeni haber bulundu: {latest['title']}")
-                print(latest["url"])
+                log(f"Yeni haber bulundu: {latest['title']}")
+                log(latest["url"])
 
                 show_desktop_notification(
                     "Yeni TFF hakem haberi",
@@ -245,14 +254,14 @@ def main():
 
 
             else:
-                print(f"Yeni haber yok. Son haber: {latest['title']}")
+                log(f"Yeni haber yok. Son haber: {latest['title']}")
 
         except KeyboardInterrupt:
-            print("\nProgram durduruldu.")
+            log("\nProgram durduruldu.")
             break
 
         except Exception as e:
-            print(f"Hata: {e}")
+            log(f"Hata: {e}")
 
             show_desktop_notification(
                 "TFF Hakem Haber Takip - Hata",
