@@ -8,7 +8,6 @@ from collections import Counter
 import requests
 import urllib3
 from bs4 import BeautifulSoup
-from plyer import notification
 from datetime import datetime
 
 
@@ -27,8 +26,9 @@ HEADERS = {
     "Pragma": "no-cache",
 }
 
-BOT_TOKEN = "8880473499:AAHsggBlqCmb6ySX8abSYqd35jkpIXY33yU"
-CHAT_ID = "905046010"
+BOT_TOKEN = "8880473499:AAHXkQ5bh0BaEQIQLhPQp7YWGEMQ528C4cs"
+# CHAT_ID = "905046010"
+CHAT_ID = "-1003752991068"
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -65,18 +65,6 @@ def send_telegram_message(title, message, url=None):
 
     except Exception as e:
         log(f"Telegram mesajı gönderilemedi: {e}")
-
-
-def show_desktop_notification(title, message):
-    try:
-        notification.notify(
-            title=title,
-            message=message,
-            app_name="TFF Hakem Haber Takip",
-            timeout=10
-        )
-    except Exception as e:
-        log(f"Bildirim gösterilemedi: {e}")
 
 
 def get_latest_news_once():
@@ -201,11 +189,6 @@ def save_latest(news):
 def main():
     log("TFF hakem haberleri takip ediliyor...")
 
-    show_desktop_notification(
-        "TFF Hakem Haber Takip",
-        "Takip sistemi başlatıldı."
-    )
-
     last_id = load_last_id()
 
     while True:
@@ -219,13 +202,8 @@ def main():
                 log(f"İlk kayıt: {latest['title']}")
                 log(latest["url"])
 
-                show_desktop_notification(
-                    "TFF Hakem Haber Takip",
-                    f"İlk haber kaydedildi: {latest['title']}"
-                )
-
                 webbrowser.open_new_tab(latest["url"])
-                
+
                 send_telegram_message(
                     "Yeni TFF hakem haberi",
                     latest["title"],
@@ -236,13 +214,8 @@ def main():
                 log(f"Yeni haber bulundu: {latest['title']}")
                 log(latest["url"])
 
-                show_desktop_notification(
-                    "Yeni TFF hakem haberi",
-                    latest["title"]
-                )
-
                 webbrowser.open_new_tab(latest["url"])
-                
+
                 send_telegram_message(
                     "Yeni TFF hakem haberi",
                     latest["title"],
@@ -251,7 +224,6 @@ def main():
 
                 last_id = latest["id"]
                 save_latest(latest)
-
 
             else:
                 log(f"Yeni haber yok. Son haber: {latest['title']}")
@@ -262,11 +234,6 @@ def main():
 
         except Exception as e:
             log(f"Hata: {e}")
-
-            show_desktop_notification(
-                "TFF Hakem Haber Takip - Hata",
-                str(e)
-            )
 
         time.sleep(CHECK_EVERY_SECONDS)
 
