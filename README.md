@@ -209,3 +209,192 @@ tff-hakem-haberleri/
 ├── last_news.json
 └── README.md
 ```
+
+## Telegram Bot Token ve Chat ID Alma
+
+Telegram bildirimi gönderebilmek için iki bilgiye ihtiyaç vardır:
+
+* `BOT_TOKEN`
+* `CHAT_ID`
+
+`BOT_TOKEN`, Telegram botunuza ait API anahtarıdır.
+`CHAT_ID`, mesajın gönderileceği kullanıcı, grup veya kanal kimliğidir.
+
+### BotFather ile Bot Token Alma
+
+1. Telegram uygulamasını açın.
+2. Arama kısmına `@BotFather` yazın.
+3. Resmi BotFather hesabını açın.
+4. Sohbeti başlatın.
+5. Aşağıdaki komutu gönderin:
+
+```text
+/newbot
+```
+
+6. BotFather sizden bot için bir görünen ad isteyecektir.
+
+Örnek:
+
+```text
+TFF Hakem Haber Botu
+```
+
+7. Daha sonra bot için benzersiz bir kullanıcı adı ister. Bu kullanıcı adı mutlaka `bot` ile bitmelidir.
+
+Örnek:
+
+```text
+tff_hakem_haber_bot
+```
+
+8. İşlem başarılı olursa BotFather size bir token verir.
+
+Token formatı genellikle şu şekildedir:
+
+```text
+123456789:ABCDefGhIJKlmNoPQRstuVWXyz
+```
+
+Bu değeri script içinde `BOT_TOKEN` değişkenine yazabilirsiniz:
+
+```python
+BOT_TOKEN = "123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+```
+
+> Bot token bilgisini kimseyle paylaşmayın. Bu token, botunuz adına mesaj göndermek için kullanılabilir.
+
+### Bot Token Yenileme
+
+Eğer bot token bilgisini kaybettiyseniz veya token başkasının eline geçtiyse BotFather üzerinden yeni token oluşturabilirsiniz.
+
+1. Telegram’da `@BotFather` sohbetini açın.
+2. Şu komutu gönderin:
+
+```text
+/token
+```
+
+3. BotFather size sahip olduğunuz botları listeler.
+4. İlgili botu seçin.
+5. BotFather yeni token üretir.
+
+Yeni token üretildikten sonra eski token geçersiz olur. Bu nedenle script içindeki `BOT_TOKEN` değerini yeni token ile güncellemeniz gerekir.
+
+### Chat ID Öğrenme
+
+`CHAT_ID` değerini öğrenmek için önce botun mesaj göndereceği sohbetle etkileşim kurulmalıdır.
+
+#### Kişisel Mesaj İçin Chat ID Alma
+
+1. Telegram’da oluşturduğunuz botu bulun.
+2. Botla sohbeti başlatın.
+3. Bota herhangi bir mesaj gönderin.
+
+Örnek:
+
+```text
+Merhaba
+```
+
+4. Tarayıcıdan aşağıdaki adresi açın:
+
+```text
+https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
+```
+
+Burada `<BOT_TOKEN>` yerine kendi bot token bilginizi yazın.
+
+Örnek:
+
+```text
+https://api.telegram.org/bot123456789:ABCDefGhIJKlmNoPQRstuVWXyz/getUpdates
+```
+
+5. Açılan JSON çıktısında şu bölümü bulun:
+
+```json
+"chat": {
+  "id": 123456789,
+  "first_name": "Ad",
+  "type": "private"
+}
+```
+
+Buradaki `id` değeri sizin `CHAT_ID` değerinizdir.
+
+Scriptte şu şekilde kullanılabilir:
+
+```python
+CHAT_ID = "123456789"
+```
+
+#### Grup İçin Chat ID Alma
+
+Telegram bildiriminin bir gruba gönderilmesini istiyorsanız:
+
+1. Botu ilgili Telegram grubuna ekleyin.
+2. Grupta herhangi bir mesaj gönderin.
+3. Tarayıcıdan şu adresi açın:
+
+```text
+https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
+```
+
+4. JSON çıktısında grup sohbetine ait şu bölümü bulun:
+
+```json
+"chat": {
+  "id": -1001234567890,
+  "title": "Grup Adı",
+  "type": "supergroup"
+}
+```
+
+Buradaki `id` değeri grup için kullanılacak `CHAT_ID` değeridir.
+
+Grup chat ID değerleri genellikle `-` işaretiyle başlar. Bu değeri eksiksiz kopyalamanız gerekir.
+
+Örnek:
+
+```python
+CHAT_ID = "-1001234567890"
+```
+
+### getUpdates Boş Gelirse
+
+Eğer tarayıcıda açtığınız `getUpdates` sonucu şu şekilde boş dönüyorsa:
+
+```json
+{
+  "ok": true,
+  "result": []
+}
+```
+
+şunları kontrol edin:
+
+* Botla bireysel sohbet başlatıldı mı?
+* Bota en az bir mesaj gönderildi mi?
+* Bot gruba eklendiyse grupta yeni bir mesaj yazıldı mı?
+* Doğru bot token kullanılıyor mu?
+
+Mesaj gönderdikten sonra `getUpdates` adresini tekrar yenileyin.
+
+### Telegram Ayarlarının Scriptte Kullanımı
+
+Token ve chat ID bilgilerini aldıktan sonra scriptte ilgili değişkenleri şu şekilde tanımlayın:
+
+```python
+BOT_TOKEN = "123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+CHAT_ID = "123456789"
+```
+
+Grup için örnek:
+
+```python
+BOT_TOKEN = "123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+CHAT_ID = "-1001234567890"
+```
+
+Bu ayarlar doğru yapıldığında script yeni haber bulduğunda Telegram üzerinden bildirim gönderecektir.
