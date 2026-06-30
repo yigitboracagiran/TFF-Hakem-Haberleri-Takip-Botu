@@ -18,49 +18,10 @@ Bu Python scripti, TFF web sitesindeki hakem haberlerini belirli aralıklarla ko
 
 ## Gereksinimler
 
-Python 3.9 veya üzeri önerilir.
-
 Gerekli Python paketleri:
 
 ```bash
 pip install requests beautifulsoup4
-```
-
-Script içinde kullanılan standart kütüphaneler:
-
-```python
-import json
-import time
-import webbrowser
-from pathlib import Path
-from datetime import datetime
-from collections import Counter
-from urllib.parse import urljoin, urlparse, parse_qs
-
-import requests
-from bs4 import BeautifulSoup
-```
-
-## Ayarlar
-
-Scriptin çalışması için aşağıdaki değişkenlerin tanımlı olması gerekir:
-
-```python
-LIST_URL = "https://..."
-HEADERS = {
-    "User-Agent": "Mozilla/5.0"
-}
-
-VERIFY_SSL = True
-
-BOT_TOKEN = "telegram_bot_token"
-CHAT_ID = "telegram_chat_id"
-
-STATE_FILE = Path("last_news.json")
-
-CHECK_EVERY_SECONDS = 60
-REFRESH_COUNT = 3
-REFRESH_DELAY_SECONDS = 5
 ```
 
 ### Değişken Açıklamaları
@@ -94,12 +55,12 @@ Aynı kontrol turundaki sorgular arasında beklenecek süredir.
 
 ## Çalıştırma
 
-Script dosyasını örneğin `tff_hakem_takip.py` olarak kaydedin.
+Script dosyasını örneğin `haber.py` olarak kaydedin.
 
 Ardından terminalden çalıştırın:
 
 ```bash
-python tff_hakem_takip.py
+python3 haber.py
 ```
 
 Program çalıştığında konsolda şu şekilde loglar üretir:
