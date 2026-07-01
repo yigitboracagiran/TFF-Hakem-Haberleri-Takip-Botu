@@ -167,6 +167,265 @@ Bu bilgi doğrudan Python dosyasına yazılmaz. Ortam değişkeninden okunur:
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 ```
 
+## Telegram Bot Token ve Chat ID Alma
+
+Telegram bildirimi gönderebilmek için iki bilgiye ihtiyaç vardır:
+
+* `TELEGRAM_BOT_TOKEN`
+* `TELEGRAM_CHAT_ID`
+
+`TELEGRAM_BOT_TOKEN`, Telegram botunuza ait API anahtarıdır.
+
+`TELEGRAM_CHAT_ID`, mesajın gönderileceği kullanıcı, grup veya kanal kimliğidir.
+
+Bu bilgiler doğrudan Python dosyasına yazılmaz. Script çalıştırılmadan önce ortam değişkeni olarak tanımlanır.
+
+## BotFather ile Bot Token Alma
+
+1. Telegram uygulamasını açın.
+2. Arama kısmına `@BotFather` yazın.
+3. Resmi BotFather hesabını açın.
+4. Sohbeti başlatın.
+5. Aşağıdaki komutu gönderin:
+
+```text
+/newbot
+```
+
+6. BotFather sizden bot için bir görünen ad isteyecektir.
+
+Örnek:
+
+```text
+TFF Hakem Haber Botu
+```
+
+7. Daha sonra bot için benzersiz bir kullanıcı adı ister. Bu kullanıcı adı mutlaka `bot` ile bitmelidir.
+
+Örnek:
+
+```text
+tff_hakem_haber_bot
+```
+
+8. İşlem başarılı olursa BotFather size bir token verir.
+
+Token formatı genellikle şu şekildedir:
+
+```text
+123456789:ABCDefGhIJKlmNoPQRstuVWXyz
+```
+
+Bu değeri kaynak kod içine yazmak yerine ortam değişkeni olarak tanımlayın.
+
+Linux / macOS:
+
+```bash
+export TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+```
+
+Bot token bilgisini kimseyle paylaşmayın. Bu token, botunuz adına mesaj göndermek için kullanılabilir.
+
+## Bot Token Yenileme
+
+Eğer bot token bilgisini kaybettiyseniz veya token başkasının eline geçtiyse BotFather üzerinden yeni token oluşturabilirsiniz.
+
+1. Telegram’da `@BotFather` sohbetini açın.
+2. Şu komutu gönderin:
+
+```text
+/token
+```
+
+3. BotFather size sahip olduğunuz botları listeler.
+4. İlgili botu seçin.
+5. BotFather yeni token üretir.
+
+Yeni token üretildikten sonra eski token geçersiz olur. Bu nedenle `TELEGRAM_BOT_TOKEN` ortam değişkenini yeni token ile güncellemeniz gerekir.
+
+Linux / macOS:
+
+```bash
+export TELEGRAM_BOT_TOKEN="yeni_token_buraya"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_BOT_TOKEN="yeni_token_buraya"
+```
+
+## Chat ID Öğrenme
+
+`TELEGRAM_CHAT_ID` değerini öğrenmek için önce botun mesaj göndereceği sohbetle etkileşim kurulmalıdır.
+
+### Kişisel Mesaj İçin Chat ID Alma
+
+1. Telegram’da oluşturduğunuz botu bulun.
+2. Botla sohbeti başlatın.
+3. Bota herhangi bir mesaj gönderin.
+
+Örnek:
+
+```text
+Merhaba
+```
+
+4. Tarayıcıdan aşağıdaki adresi açın:
+
+```text
+https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
+```
+
+Burada `<BOT_TOKEN>` yerine kendi bot token bilginizi yazın.
+
+Örnek:
+
+```text
+https://api.telegram.org/bot123456789:ABCDefGhIJKlmNoPQRstuVWXyz/getUpdates
+```
+
+5. Açılan JSON çıktısında şu bölümü bulun:
+
+```json
+"chat": {
+  "id": 123456789,
+  "first_name": "Ad",
+  "type": "private"
+}
+```
+
+Buradaki `id` değeri sizin `TELEGRAM_CHAT_ID` değerinizdir.
+
+Bu değeri ortam değişkeni olarak tanımlayın.
+
+Linux / macOS:
+
+```bash
+export TELEGRAM_CHAT_ID="123456789"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_CHAT_ID="123456789"
+```
+
+### Grup İçin Chat ID Alma
+
+Telegram bildiriminin bir gruba gönderilmesini istiyorsanız:
+
+1. Botu ilgili Telegram grubuna ekleyin.
+2. Grupta herhangi bir mesaj gönderin.
+3. Tarayıcıdan şu adresi açın:
+
+```text
+https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
+```
+
+4. JSON çıktısında grup sohbetine ait şu bölümü bulun:
+
+```json
+"chat": {
+  "id": -1001234567890,
+  "title": "Grup Adı",
+  "type": "supergroup"
+}
+```
+
+Buradaki `id` değeri grup için kullanılacak `TELEGRAM_CHAT_ID` değeridir.
+
+Grup chat ID değerleri genellikle `-` işaretiyle başlar. Bu değeri eksiksiz kopyalamanız gerekir.
+
+Linux / macOS:
+
+```bash
+export TELEGRAM_CHAT_ID="-1001234567890"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_CHAT_ID="-1001234567890"
+```
+
+## getUpdates Boş Gelirse
+
+Eğer tarayıcıda açtığınız `getUpdates` sonucu şu şekilde boş dönüyorsa:
+
+```json
+{
+  "ok": true,
+  "result": []
+}
+```
+
+şunları kontrol edin:
+
+* Botla bireysel sohbet başlatıldı mı?
+* Bota en az bir mesaj gönderildi mi?
+* Bot gruba eklendiyse grupta yeni bir mesaj yazıldı mı?
+* Doğru bot token kullanılıyor mu?
+
+Mesaj gönderdikten sonra `getUpdates` adresini tekrar yenileyin.
+
+## Telegram Ayarlarının Scriptte Kullanımı
+
+Token ve chat ID bilgilerini aldıktan sonra bu değerleri Python dosyasına yazmayın.
+
+Script zaten şu şekilde ortam değişkenlerini okur:
+
+```python
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+```
+
+Bu nedenle çalıştırmadan önce değişkenleri terminalde tanımlamanız yeterlidir.
+
+Linux / macOS:
+
+```bash
+export TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+export TELEGRAM_CHAT_ID="123456789"
+
+python3 haber.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+$env:TELEGRAM_CHAT_ID="123456789"
+
+python haber.py
+```
+
+Bu ayarlar doğru yapıldığında script yeni haber bulduğunda Telegram üzerinden bildirim gönderecektir.
+
+## Güvenlik Notu
+
+Bot token bilgisini doğrudan Python dosyasına yazmak önerilmez.
+
+Yanlış kullanım:
+
+```python
+BOT_TOKEN = "123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+CHAT_ID = "123456789"
+```
+
+Doğru kullanım:
+
+```python
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+```
+
 ## Telegram Ortam Değişkenleri
 
 Script Telegram bilgilerini şu iki ortam değişkeninden okur:
@@ -517,263 +776,4 @@ Bu durumda ilgili satırı kaldırabilir veya yorum satırı yapabilirsiniz:
 
 ```python
 # webbrowser.open_new_tab(latest["url"])
-```
-
-## Telegram Bot Token ve Chat ID Alma
-
-Telegram bildirimi gönderebilmek için iki bilgiye ihtiyaç vardır:
-
-* `TELEGRAM_BOT_TOKEN`
-* `TELEGRAM_CHAT_ID`
-
-`TELEGRAM_BOT_TOKEN`, Telegram botunuza ait API anahtarıdır.
-
-`TELEGRAM_CHAT_ID`, mesajın gönderileceği kullanıcı, grup veya kanal kimliğidir.
-
-Bu bilgiler doğrudan Python dosyasına yazılmaz. Script çalıştırılmadan önce ortam değişkeni olarak tanımlanır.
-
-## BotFather ile Bot Token Alma
-
-1. Telegram uygulamasını açın.
-2. Arama kısmına `@BotFather` yazın.
-3. Resmi BotFather hesabını açın.
-4. Sohbeti başlatın.
-5. Aşağıdaki komutu gönderin:
-
-```text
-/newbot
-```
-
-6. BotFather sizden bot için bir görünen ad isteyecektir.
-
-Örnek:
-
-```text
-TFF Hakem Haber Botu
-```
-
-7. Daha sonra bot için benzersiz bir kullanıcı adı ister. Bu kullanıcı adı mutlaka `bot` ile bitmelidir.
-
-Örnek:
-
-```text
-tff_hakem_haber_bot
-```
-
-8. İşlem başarılı olursa BotFather size bir token verir.
-
-Token formatı genellikle şu şekildedir:
-
-```text
-123456789:ABCDefGhIJKlmNoPQRstuVWXyz
-```
-
-Bu değeri kaynak kod içine yazmak yerine ortam değişkeni olarak tanımlayın.
-
-Linux / macOS:
-
-```bash
-export TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
-```
-
-Windows PowerShell:
-
-```powershell
-$env:TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
-```
-
-Bot token bilgisini kimseyle paylaşmayın. Bu token, botunuz adına mesaj göndermek için kullanılabilir.
-
-## Bot Token Yenileme
-
-Eğer bot token bilgisini kaybettiyseniz veya token başkasının eline geçtiyse BotFather üzerinden yeni token oluşturabilirsiniz.
-
-1. Telegram’da `@BotFather` sohbetini açın.
-2. Şu komutu gönderin:
-
-```text
-/token
-```
-
-3. BotFather size sahip olduğunuz botları listeler.
-4. İlgili botu seçin.
-5. BotFather yeni token üretir.
-
-Yeni token üretildikten sonra eski token geçersiz olur. Bu nedenle `TELEGRAM_BOT_TOKEN` ortam değişkenini yeni token ile güncellemeniz gerekir.
-
-Linux / macOS:
-
-```bash
-export TELEGRAM_BOT_TOKEN="yeni_token_buraya"
-```
-
-Windows PowerShell:
-
-```powershell
-$env:TELEGRAM_BOT_TOKEN="yeni_token_buraya"
-```
-
-## Chat ID Öğrenme
-
-`TELEGRAM_CHAT_ID` değerini öğrenmek için önce botun mesaj göndereceği sohbetle etkileşim kurulmalıdır.
-
-### Kişisel Mesaj İçin Chat ID Alma
-
-1. Telegram’da oluşturduğunuz botu bulun.
-2. Botla sohbeti başlatın.
-3. Bota herhangi bir mesaj gönderin.
-
-Örnek:
-
-```text
-Merhaba
-```
-
-4. Tarayıcıdan aşağıdaki adresi açın:
-
-```text
-https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
-```
-
-Burada `<BOT_TOKEN>` yerine kendi bot token bilginizi yazın.
-
-Örnek:
-
-```text
-https://api.telegram.org/bot123456789:ABCDefGhIJKlmNoPQRstuVWXyz/getUpdates
-```
-
-5. Açılan JSON çıktısında şu bölümü bulun:
-
-```json
-"chat": {
-  "id": 123456789,
-  "first_name": "Ad",
-  "type": "private"
-}
-```
-
-Buradaki `id` değeri sizin `TELEGRAM_CHAT_ID` değerinizdir.
-
-Bu değeri ortam değişkeni olarak tanımlayın.
-
-Linux / macOS:
-
-```bash
-export TELEGRAM_CHAT_ID="123456789"
-```
-
-Windows PowerShell:
-
-```powershell
-$env:TELEGRAM_CHAT_ID="123456789"
-```
-
-### Grup İçin Chat ID Alma
-
-Telegram bildiriminin bir gruba gönderilmesini istiyorsanız:
-
-1. Botu ilgili Telegram grubuna ekleyin.
-2. Grupta herhangi bir mesaj gönderin.
-3. Tarayıcıdan şu adresi açın:
-
-```text
-https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
-```
-
-4. JSON çıktısında grup sohbetine ait şu bölümü bulun:
-
-```json
-"chat": {
-  "id": -1001234567890,
-  "title": "Grup Adı",
-  "type": "supergroup"
-}
-```
-
-Buradaki `id` değeri grup için kullanılacak `TELEGRAM_CHAT_ID` değeridir.
-
-Grup chat ID değerleri genellikle `-` işaretiyle başlar. Bu değeri eksiksiz kopyalamanız gerekir.
-
-Linux / macOS:
-
-```bash
-export TELEGRAM_CHAT_ID="-1001234567890"
-```
-
-Windows PowerShell:
-
-```powershell
-$env:TELEGRAM_CHAT_ID="-1001234567890"
-```
-
-## getUpdates Boş Gelirse
-
-Eğer tarayıcıda açtığınız `getUpdates` sonucu şu şekilde boş dönüyorsa:
-
-```json
-{
-  "ok": true,
-  "result": []
-}
-```
-
-şunları kontrol edin:
-
-* Botla bireysel sohbet başlatıldı mı?
-* Bota en az bir mesaj gönderildi mi?
-* Bot gruba eklendiyse grupta yeni bir mesaj yazıldı mı?
-* Doğru bot token kullanılıyor mu?
-
-Mesaj gönderdikten sonra `getUpdates` adresini tekrar yenileyin.
-
-## Telegram Ayarlarının Scriptte Kullanımı
-
-Token ve chat ID bilgilerini aldıktan sonra bu değerleri Python dosyasına yazmayın.
-
-Script zaten şu şekilde ortam değişkenlerini okur:
-
-```python
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
-```
-
-Bu nedenle çalıştırmadan önce değişkenleri terminalde tanımlamanız yeterlidir.
-
-Linux / macOS:
-
-```bash
-export TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
-export TELEGRAM_CHAT_ID="123456789"
-
-python3 haber.py
-```
-
-Windows PowerShell:
-
-```powershell
-$env:TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
-$env:TELEGRAM_CHAT_ID="123456789"
-
-python haber.py
-```
-
-Bu ayarlar doğru yapıldığında script yeni haber bulduğunda Telegram üzerinden bildirim gönderecektir.
-
-## Güvenlik Notu
-
-Bot token bilgisini doğrudan Python dosyasına yazmak önerilmez.
-
-Yanlış kullanım:
-
-```python
-BOT_TOKEN = "123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
-CHAT_ID = "123456789"
-```
-
-Doğru kullanım:
-
-```python
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 ```
