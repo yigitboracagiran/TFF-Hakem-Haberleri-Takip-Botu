@@ -1,8 +1,13 @@
 # TFF Hakem Haberleri Takip Botu
 
-Bu Python scripti, TFF web sitesindeki hakem haberlerini belirli aralıklarla kontrol eder. Yeni bir haber bulunduğunda:
+Bu Python scripti, TFF web sitesindeki hakem haberlerini belirli aralıklarla kontrol eder.
+
+Program ilk kez çalıştırıldığında mevcut son haberi başlangıç kaydı olarak kabul eder ve bildirim göndermez.
+
+Daha sonra yeni bir haber bulunduğunda:
 
 * Haber başlığını konsola yazar
+* Haber bağlantısını konsola yazar
 * Haber bağlantısını tarayıcıda açar
 * Telegram üzerinden bildirim gönderir
 * Son görülen haber bilgisini yerel bir JSON dosyasına kaydeder
@@ -10,66 +15,242 @@ Bu Python scripti, TFF web sitesindeki hakem haberlerini belirli aralıklarla ko
 ## Özellikler
 
 * TFF haber listesinden en güncel hakem haberini tespit eder
-* Haberleri `ftxtID` değerine göre karşılaştırır
+* Haberleri URL içindeki `ftxtID` değerine göre karşılaştırır
 * Aynı kontrolü birden fazla kez yaparak daha güvenilir sonuç seçer
 * Telegram bildirimi gönderir
 * Yeni haber bulunduğunda otomatik olarak tarayıcıda açar
 * Son haber ID bilgisini dosyada sakladığı için program yeniden başlatıldığında kaldığı yerden devam eder
+* Telegram bot token ve chat ID bilgilerini ortam değişkenlerinden okur
+* İlk çalıştırmada mevcut haberi yeni haber gibi bildirmez
 
 ## Gereksinimler
 
-Gerekli Python paketleri:
+Script Python 3 ile çalışır.
 
-```bash
-pip install requests beautifulsoup4
+Kodda kullanılan bazı modüller Python’un standart kütüphanesiyle birlikte gelir. Bunlar için ayrıca kurulum gerekmez:
+
+```text
+time
+json
+webbrowser
+pathlib
+urllib.parse
+collections
+os
+datetime
 ```
 
-### Değişken Açıklamaları
+Harici olarak kurulması gereken Python paketleri şunlardır:
 
-`LIST_URL`
+```text
+requests
+urllib3
+beautifulsoup4
+```
+
+Kurulum için:
+
+```bash
+pip3 install requests urllib3 beautifulsoup4
+```
+
+## Proje Yapısı
+
+Örnek proje yapısı:
+
+```text
+tff-hakem-haberleri/
+├── haber.py
+├── tff_hakem_son_haber.json
+└── README.md
+```
+
+`tff_hakem_son_haber.json` dosyası script tarafından otomatik oluşturulur. İlk başta elle oluşturmanız gerekmez.
+
+## Değişken Açıklamaları
+
+### `LIST_URL`
+
 Kontrol edilecek TFF haber liste sayfasının adresidir.
 
-`HEADERS`
-HTTP isteği gönderilirken kullanılacak başlıklardır. Bazı siteler varsayılan Python isteklerini engelleyebileceği için `User-Agent` tanımlamak faydalıdır.
+```python
+LIST_URL = "https://www.tff.org/default.aspx?pageID=248"
+```
 
-`VERIFY_SSL`
-SSL doğrulamasının aktif olup olmayacağını belirler. Genellikle `True` bırakılması önerilir.
+### `CHECK_EVERY_SECONDS`
 
-`BOT_TOKEN`
-Telegram bot token bilgisidir. BotFather üzerinden alınır.
-
-`CHAT_ID`
-Bildirim gönderilecek Telegram kullanıcı, grup veya kanal ID bilgisidir.
-
-`STATE_FILE`
-Son görülen haber bilgisinin kaydedileceği JSON dosyasıdır.
-
-`CHECK_EVERY_SECONDS`
 Ana döngüde iki kontrol arasında beklenecek süredir.
 
-`REFRESH_COUNT`
+```python
+CHECK_EVERY_SECONDS = 60
+```
+
+Bu ayara göre script her 60 saniyede bir TFF haber listesini kontrol eder.
+
+### `STATE_FILE`
+
+Son görülen haber bilgisinin kaydedileceği JSON dosyasıdır.
+
+```python
+STATE_FILE = Path("tff_hakem_son_haber.json")
+```
+
+Script yeniden başlatıldığında bu dosyayı okuyarak son görülen haber ID değerini öğrenir.
+
+### `REFRESH_COUNT`
+
 Her kontrol turunda kaç kez haber sorgusu yapılacağını belirler.
 
-`REFRESH_DELAY_SECONDS`
+```python
+REFRESH_COUNT = 5
+```
+
+Script tek bir kontrole güvenmek yerine aynı sayfayı 5 kez sorgular ve daha güvenilir bir sonuç seçmeye çalışır.
+
+### `REFRESH_DELAY_SECONDS`
+
 Aynı kontrol turundaki sorgular arasında beklenecek süredir.
+
+```python
+REFRESH_DELAY_SECONDS = 2
+```
+
+Bu ayara göre aynı kontrol turundaki sorgular arasında 2 saniye beklenir.
+
+### `VERIFY_SSL`
+
+SSL doğrulamasının aktif olup olmayacağını belirler.
+
+```python
+VERIFY_SSL = False
+```
+
+Güvenlik açısından mümkünse `True` kullanılması önerilir. Ancak bazı durumlarda site tarafındaki SSL yapılandırması nedeniyle hata alınırsa geçici olarak `False` kullanılabilir.
+
+`VERIFY_SSL = False` kullanıldığında SSL uyarılarını gizlemek için scriptte şu satır yer alır:
+
+```python
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+```
+
+### `HEADERS`
+
+HTTP isteği gönderilirken kullanılacak başlıklardır.
+
+```python
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (compatible; TFF-Haber-Takip/1.0)",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+}
+```
+
+Bazı siteler varsayılan Python isteklerini engelleyebileceği için `User-Agent` tanımlamak faydalıdır.
+
+### `BOT_TOKEN`
+
+Telegram bot token bilgisidir.
+
+Bu bilgi doğrudan Python dosyasına yazılmaz. Ortam değişkeninden okunur:
+
+```python
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+```
+
+### `CHAT_ID`
+
+Bildirim gönderilecek Telegram kullanıcı, grup veya kanal ID bilgisidir.
+
+Bu bilgi doğrudan Python dosyasına yazılmaz. Ortam değişkeninden okunur:
+
+```python
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+```
+
+## Telegram Ortam Değişkenleri
+
+Script Telegram bilgilerini şu iki ortam değişkeninden okur:
+
+```text
+TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID
+```
+
+Bu bilgileri kaynak kodun içine yazmak yerine terminalde tanımlamanız gerekir.
 
 ## Çalıştırma
 
 Script dosyasını örneğin `haber.py` olarak kaydedin.
 
-Ardından terminalden çalıştırın:
+Çalıştırmadan önce Telegram bilgilerini ortam değişkeni olarak tanımlayın.
+
+### Linux / macOS
+
+Kişisel Telegram sohbeti için:
 
 ```bash
+export TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+export TELEGRAM_CHAT_ID="123456789"
+
 python3 haber.py
 ```
+
+Grup veya kanal için:
+
+```bash
+export TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+export TELEGRAM_CHAT_ID="-1001234567890"
+
+python3 haber.py
+```
+
+### Windows PowerShell
+
+Kişisel Telegram sohbeti için:
+
+```powershell
+$env:TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+$env:TELEGRAM_CHAT_ID="123456789"
+
+python haber.py
+```
+
+Grup veya kanal için:
+
+```powershell
+$env:TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+$env:TELEGRAM_CHAT_ID="-1001234567890"
+
+python haber.py
+```
+
+## Örnek Log Çıktısı
 
 Program çalıştığında konsolda şu şekilde loglar üretir:
 
 ```text
 30.06.2026-14:25 TFF hakem haberleri takip ediliyor...
-30.06.2026-14:25 Kontrol 1/3: Haber başlığı - 12345
-30.06.2026-14:25 Seçilen çoğunluk haber: Haber başlığı (3/3)
+30.06.2026-14:25 Kontrol 1/5: Haber başlığı - 12345
+30.06.2026-14:25 Kontrol 2/5: Haber başlığı - 12345
+30.06.2026-14:25 Kontrol 3/5: Haber başlığı - 12345
+30.06.2026-14:25 Kontrol 4/5: Haber başlığı - 12345
+30.06.2026-14:25 Kontrol 5/5: Haber başlığı - 12345
+30.06.2026-14:25 Seçilen çoğunluk haber: Haber başlığı (5/5)
 30.06.2026-14:25 Yeni haber yok. Son haber: Haber başlığı
+```
+
+İlk çalıştırmada daha önce kayıtlı haber yoksa şu şekilde bir çıktı görülür:
+
+```text
+30.06.2026-14:25 İlk kayıt yapıldı, bildirim gönderilmedi: Haber başlığı
+30.06.2026-14:25 https://haber-linki
+```
+
+Yeni haber bulunduğunda ise şu şekilde çıktı üretilir:
+
+```text
+30.06.2026-14:30 Yeni haber bulundu: Yeni haber başlığı
+30.06.2026-14:30 https://haber-linki
 ```
 
 Programı durdurmak için:
@@ -103,19 +284,51 @@ Program ilk kez çalıştırıldığında daha önce kaydedilmiş bir haber ID b
 Bu durumda:
 
 * Haber bilgisi `STATE_FILE` içine kaydedilir
-* Haber bağlantısı tarayıcıda açılır
-* Telegram bildirimi gönderilir
+* Haber başlığı konsola yazılır
+* Haber bağlantısı konsola yazılır
+* Telegram bildirimi gönderilmez
+* Haber bağlantısı tarayıcıda açılmaz
 
-Eğer ilk çalıştırmada bildirim gönderilmesini istemiyorsanız, `main()` fonksiyonundaki ilk kayıt bloğunda yer alan şu bölümleri kaldırabilir veya yorum satırı yapabilirsiniz:
+Bu davranış sayesinde program ilk kez başlatıldığında mevcut son haber yanlışlıkla “yeni haber” gibi bildirilmez.
+
+İlgili kod bloğu şu şekildedir:
 
 ```python
-webbrowser.open_new_tab(latest["url"])
+if last_id is None:
+    last_id = latest["id"]
+    save_latest(latest)
 
-send_telegram_message(
-    "Yeni TFF hakem haberi",
-    latest["title"],
-    latest["url"]
-)
+    log(f"İlk kayıt yapıldı, bildirim gönderilmedi: {latest['title']}")
+    log(latest["url"])
+```
+
+Sonraki kontrollerde farklı bir haber ID değeri bulunursa bu haber yeni haber kabul edilir.
+
+Yeni haber bulunduğunda:
+
+* Haber başlığı konsola yazılır
+* Haber bağlantısı konsola yazılır
+* Haber bağlantısı tarayıcıda açılır
+* Telegram bildirimi gönderilir
+* Son haber bilgisi `STATE_FILE` içine kaydedilir
+
+İlgili kod bloğu şu şekildedir:
+
+```python
+elif latest["id"] != last_id:
+    log(f"Yeni haber bulundu: {latest['title']}")
+    log(latest["url"])
+
+    webbrowser.open_new_tab(latest["url"])
+
+    send_telegram_message(
+        "Yeni TFF hakem haberi",
+        latest["title"],
+        latest["url"]
+    )
+
+    last_id = latest["id"]
+    save_latest(latest)
 ```
 
 ## Telegram Bildirimi
@@ -130,7 +343,19 @@ Haber başlığı
 https://haber-linki
 ```
 
-Telegram bildirimi göndermek için `BOT_TOKEN` ve `CHAT_ID` değerlerinin doğru tanımlanmış olması gerekir.
+Telegram bildirimi göndermek için aşağıdaki iki ortam değişkeninin tanımlanmış olması gerekir:
+
+```text
+TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID
+```
+
+Script bu değerleri şu şekilde okur:
+
+```python
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+```
 
 Eğer bu değerlerden biri eksikse program hata vermez, sadece konsola şu mesajı yazar:
 
@@ -142,7 +367,13 @@ Telegram token veya chat_id tanımlı değil.
 
 Son görülen haber bilgisi JSON formatında saklanır.
 
-Örnek `last_news.json` içeriği:
+Dosya adı:
+
+```text
+tff_hakem_son_haber.json
+```
+
+Örnek dosya içeriği:
 
 ```json
 {
@@ -153,6 +384,8 @@ Son görülen haber bilgisi JSON formatında saklanır.
 ```
 
 Bu dosya sayesinde script yeniden başlatıldığında aynı haberi tekrar yeni haber olarak algılamaz.
+
+Dosya silinirse script bir sonraki çalıştırmada mevcut son haberi yeniden ilk kayıt olarak kabul eder ve bildirim göndermez.
 
 ## Hata Yönetimi
 
@@ -166,20 +399,83 @@ Script aşağıdaki durumlarda hata mesajını konsola yazar ve çalışmaya dev
 
 Ana döngüde oluşan hatalar programı durdurmaz. Sadece loglanır ve bir sonraki kontrol zamanı beklenir.
 
+Klavye ile durdurma yapılırsa program şu mesajı yazar ve kapanır:
+
+```text
+Program durduruldu.
+```
+
 ## Olası Sorunlar
 
 ### Telegram mesajı gelmiyor
 
 Kontrol edilmesi gerekenler:
 
-* `BOT_TOKEN` doğru mu?
-* `CHAT_ID` doğru mu?
+* `TELEGRAM_BOT_TOKEN` doğru tanımlandı mı?
+* `TELEGRAM_CHAT_ID` doğru tanımlandı mı?
 * Bot ilgili kullanıcıya, gruba veya kanala mesaj gönderebiliyor mu?
 * Bot gruba eklendiyse gerekli izinleri var mı?
+* Ortam değişkenleri script çalıştırılan terminal oturumunda gerçekten mevcut mu?
+
+Linux / macOS üzerinde kontrol etmek için:
+
+```bash
+echo $TELEGRAM_BOT_TOKEN
+echo $TELEGRAM_CHAT_ID
+```
+
+Windows PowerShell üzerinde kontrol etmek için:
+
+```powershell
+echo $env:TELEGRAM_BOT_TOKEN
+echo $env:TELEGRAM_CHAT_ID
+```
+
+### Telegram token veya chat_id tanımlı değil mesajı alıyorum
+
+Bu mesaj, scriptin ortam değişkenlerini okuyamadığı anlamına gelir.
+
+Script şu değişkenleri bekler:
+
+```text
+TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID
+```
+
+Yanlış örnek:
+
+```bash
+export BOT_TOKEN="..."
+export CHAT_ID="..."
+```
+
+Doğru örnek:
+
+```bash
+export TELEGRAM_BOT_TOKEN="..."
+export TELEGRAM_CHAT_ID="..."
+```
+
+Windows PowerShell için doğru örnek:
+
+```powershell
+$env:TELEGRAM_BOT_TOKEN="..."
+$env:TELEGRAM_CHAT_ID="..."
+```
+
+### İlk çalıştırmada Telegram mesajı gelmedi
+
+Bu normaldir.
+
+Scriptin güncel davranışına göre ilk çalıştırmada mevcut son haber sadece kaydedilir. Telegram bildirimi gönderilmez.
+
+Bildirim yalnızca daha sonra farklı bir haber ID değeri tespit edilirse gönderilir.
 
 ### Haber bulunamıyor
 
-TFF sayfasının HTML yapısı değişmiş olabilir. Script özellikle URL içinde `ftxtID` parametresi bulunan bağlantıları arar. Eğer site farklı bir URL yapısına geçerse `get_latest_news_once()` fonksiyonunun güncellenmesi gerekir.
+TFF sayfasının HTML yapısı değişmiş olabilir.
+
+Script özellikle URL içinde `ftxtID` parametresi bulunan bağlantıları arar. Eğer site farklı bir URL yapısına geçerse `get_latest_news_once()` fonksiyonunun güncellenmesi gerekir.
 
 ### Türkçe karakterler bozuk görünüyor
 
@@ -199,28 +495,44 @@ Geçici olarak aşağıdaki ayar denenebilir:
 VERIFY_SSL = False
 ```
 
-Ancak güvenlik açısından mümkünse SSL doğrulamasını açık bırakmak daha uygundur.
+Ancak güvenlik açısından mümkünse SSL doğrulamasını açık bırakmak daha uygundur:
 
-## Örnek Proje Yapısı
+```python
+VERIFY_SSL = True
+```
 
-```text
-tff-hakem-haberleri/
-├── tff_hakem_takip.py
-├── last_news.json
-└── README.md
+### Tarayıcı açılmıyor
+
+Script yeni haber bulunduğunda şu satır ile haber bağlantısını tarayıcıda açar:
+
+```python
+webbrowser.open_new_tab(latest["url"])
+```
+
+Bu özellik masaüstü bilgisayarda çalıştırıldığında uygundur.
+
+Ancak script bir sunucuda, VPS üzerinde, Docker içinde veya grafik arayüzü olmayan bir ortamda çalıştırılıyorsa tarayıcı açılamayabilir.
+
+Bu durumda ilgili satırı kaldırabilir veya yorum satırı yapabilirsiniz:
+
+```python
+# webbrowser.open_new_tab(latest["url"])
 ```
 
 ## Telegram Bot Token ve Chat ID Alma
 
 Telegram bildirimi gönderebilmek için iki bilgiye ihtiyaç vardır:
 
-* `BOT_TOKEN`
-* `CHAT_ID`
+* `TELEGRAM_BOT_TOKEN`
+* `TELEGRAM_CHAT_ID`
 
-`BOT_TOKEN`, Telegram botunuza ait API anahtarıdır.
-`CHAT_ID`, mesajın gönderileceği kullanıcı, grup veya kanal kimliğidir.
+`TELEGRAM_BOT_TOKEN`, Telegram botunuza ait API anahtarıdır.
 
-### BotFather ile Bot Token Alma
+`TELEGRAM_CHAT_ID`, mesajın gönderileceği kullanıcı, grup veya kanal kimliğidir.
+
+Bu bilgiler doğrudan Python dosyasına yazılmaz. Script çalıştırılmadan önce ortam değişkeni olarak tanımlanır.
+
+## BotFather ile Bot Token Alma
 
 1. Telegram uygulamasını açın.
 2. Arama kısmına `@BotFather` yazın.
@@ -256,15 +568,23 @@ Token formatı genellikle şu şekildedir:
 123456789:ABCDefGhIJKlmNoPQRstuVWXyz
 ```
 
-Bu değeri script içinde `BOT_TOKEN` değişkenine yazabilirsiniz:
+Bu değeri kaynak kod içine yazmak yerine ortam değişkeni olarak tanımlayın.
 
-```python
-BOT_TOKEN = "123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+Linux / macOS:
+
+```bash
+export TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
 ```
 
-> Bot token bilgisini kimseyle paylaşmayın. Bu token, botunuz adına mesaj göndermek için kullanılabilir.
+Windows PowerShell:
 
-### Bot Token Yenileme
+```powershell
+$env:TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+```
+
+Bot token bilgisini kimseyle paylaşmayın. Bu token, botunuz adına mesaj göndermek için kullanılabilir.
+
+## Bot Token Yenileme
 
 Eğer bot token bilgisini kaybettiyseniz veya token başkasının eline geçtiyse BotFather üzerinden yeni token oluşturabilirsiniz.
 
@@ -279,13 +599,25 @@ Eğer bot token bilgisini kaybettiyseniz veya token başkasının eline geçtiys
 4. İlgili botu seçin.
 5. BotFather yeni token üretir.
 
-Yeni token üretildikten sonra eski token geçersiz olur. Bu nedenle script içindeki `BOT_TOKEN` değerini yeni token ile güncellemeniz gerekir.
+Yeni token üretildikten sonra eski token geçersiz olur. Bu nedenle `TELEGRAM_BOT_TOKEN` ortam değişkenini yeni token ile güncellemeniz gerekir.
 
-### Chat ID Öğrenme
+Linux / macOS:
 
-`CHAT_ID` değerini öğrenmek için önce botun mesaj göndereceği sohbetle etkileşim kurulmalıdır.
+```bash
+export TELEGRAM_BOT_TOKEN="yeni_token_buraya"
+```
 
-#### Kişisel Mesaj İçin Chat ID Alma
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_BOT_TOKEN="yeni_token_buraya"
+```
+
+## Chat ID Öğrenme
+
+`TELEGRAM_CHAT_ID` değerini öğrenmek için önce botun mesaj göndereceği sohbetle etkileşim kurulmalıdır.
+
+### Kişisel Mesaj İçin Chat ID Alma
 
 1. Telegram’da oluşturduğunuz botu bulun.
 2. Botla sohbeti başlatın.
@@ -321,15 +653,23 @@ https://api.telegram.org/bot123456789:ABCDefGhIJKlmNoPQRstuVWXyz/getUpdates
 }
 ```
 
-Buradaki `id` değeri sizin `CHAT_ID` değerinizdir.
+Buradaki `id` değeri sizin `TELEGRAM_CHAT_ID` değerinizdir.
 
-Scriptte şu şekilde kullanılabilir:
+Bu değeri ortam değişkeni olarak tanımlayın.
 
-```python
-CHAT_ID = "123456789"
+Linux / macOS:
+
+```bash
+export TELEGRAM_CHAT_ID="123456789"
 ```
 
-#### Grup İçin Chat ID Alma
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_CHAT_ID="123456789"
+```
+
+### Grup İçin Chat ID Alma
 
 Telegram bildiriminin bir gruba gönderilmesini istiyorsanız:
 
@@ -351,17 +691,23 @@ https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
 }
 ```
 
-Buradaki `id` değeri grup için kullanılacak `CHAT_ID` değeridir.
+Buradaki `id` değeri grup için kullanılacak `TELEGRAM_CHAT_ID` değeridir.
 
 Grup chat ID değerleri genellikle `-` işaretiyle başlar. Bu değeri eksiksiz kopyalamanız gerekir.
 
-Örnek:
+Linux / macOS:
 
-```python
-CHAT_ID = "-1001234567890"
+```bash
+export TELEGRAM_CHAT_ID="-1001234567890"
 ```
 
-### getUpdates Boş Gelirse
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_CHAT_ID="-1001234567890"
+```
+
+## getUpdates Boş Gelirse
 
 Eğer tarayıcıda açtığınız `getUpdates` sonucu şu şekilde boş dönüyorsa:
 
@@ -381,20 +727,53 @@ Eğer tarayıcıda açtığınız `getUpdates` sonucu şu şekilde boş dönüyo
 
 Mesaj gönderdikten sonra `getUpdates` adresini tekrar yenileyin.
 
-### Telegram Ayarlarının Scriptte Kullanımı
+## Telegram Ayarlarının Scriptte Kullanımı
 
-Token ve chat ID bilgilerini aldıktan sonra scriptte ilgili değişkenleri şu şekilde tanımlayın:
+Token ve chat ID bilgilerini aldıktan sonra bu değerleri Python dosyasına yazmayın.
+
+Script zaten şu şekilde ortam değişkenlerini okur:
+
+```python
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+```
+
+Bu nedenle çalıştırmadan önce değişkenleri terminalde tanımlamanız yeterlidir.
+
+Linux / macOS:
+
+```bash
+export TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+export TELEGRAM_CHAT_ID="123456789"
+
+python3 haber.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
+$env:TELEGRAM_CHAT_ID="123456789"
+
+python haber.py
+```
+
+Bu ayarlar doğru yapıldığında script yeni haber bulduğunda Telegram üzerinden bildirim gönderecektir.
+
+## Güvenlik Notu
+
+Bot token bilgisini doğrudan Python dosyasına yazmak önerilmez.
+
+Yanlış kullanım:
 
 ```python
 BOT_TOKEN = "123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
 CHAT_ID = "123456789"
 ```
 
-Grup için örnek:
+Doğru kullanım:
 
 ```python
-BOT_TOKEN = "123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
-CHAT_ID = "-1001234567890"
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 ```
-
-Bu ayarlar doğru yapıldığında script yeni haber bulduğunda Telegram üzerinden bildirim gönderecektir.
