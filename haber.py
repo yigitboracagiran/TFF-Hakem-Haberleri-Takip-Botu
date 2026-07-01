@@ -4,7 +4,7 @@ import webbrowser
 from pathlib import Path
 from urllib.parse import urljoin, urlparse, parse_qs
 from collections import Counter
-
+import os
 import requests
 import urllib3
 from bs4 import BeautifulSoup
@@ -26,9 +26,8 @@ HEADERS = {
     "Pragma": "no-cache",
 }
 
-BOT_TOKEN = "8880473499:AAHXkQ5bh0BaEQIQLhPQp7YWGEMQ528C4cs"
-# CHAT_ID = "905046010"
-CHAT_ID = "-1003752991068"
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -199,16 +198,8 @@ def main():
                 last_id = latest["id"]
                 save_latest(latest)
 
-                log(f"İlk kayıt: {latest['title']}")
+                log(f"İlk kayıt yapıldı, bildirim gönderilmedi: {latest['title']}")
                 log(latest["url"])
-
-                webbrowser.open_new_tab(latest["url"])
-
-                send_telegram_message(
-                    "Yeni TFF hakem haberi",
-                    latest["title"],
-                    latest["url"]
-                )
 
             elif latest["id"] != last_id:
                 log(f"Yeni haber bulundu: {latest['title']}")
