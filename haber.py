@@ -167,13 +167,18 @@ def get_latest_news():
     return selected
 
 
-def load_last_id():
+def load_last_news():
     if not STATE_FILE.exists():
         return None
 
     try:
         data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
-        return data.get("id")
+
+        if not isinstance(data, dict):
+            return None
+
+        return data
+
     except Exception:
         return None
 
@@ -185,39 +190,46 @@ def save_latest(news):
     )
 
 
+def notify_new_news(latest, reason):
+    log(reason)
+    log(f"Bildirim gönderilecek haber: {latest['title']}")
+    log(latest["url"])
+
+    webbrowser.open_new_tab(latest["url"])
+
+    send_telegram_message(
+        "Yeni TFF hakem haberi",
+        latest["title"],
+        latest["url"]
+    )
+
+    save_latest(latest)
+
+
 def main():
     log("TFF hakem haberleri takip ediliyor...")
-
-    last_id = load_last_id()
 
     while True:
         try:
             latest = get_latest_news()
+            saved_news = load_last_news()
 
-            if last_id is None:
-                last_id = latest["id"]
-                save_latest(latest)
+            saved_id = saved_news.get("id") if saved_news else None
 
-                log(f"İlk kayıt yapıldı, bildirim gönderilmedi: {latest['title']}")
-                log(latest["url"])
-
-            elif latest["id"] != last_id:
-                log(f"Yeni haber bulundu: {latest['title']}")
-                log(latest["url"])
-
-                webbrowser.open_new_tab(latest["url"])
-
-                send_telegram_message(
-                    "Yeni TFF hakem haberi",
-                    latest["title"],
-                    latest["url"]
-                )
-
-                last_id = latest["id"]
-                save_latest(latest)
+            if saved_id == latest["id"]:
+                log(f"Yeni haber yok. Son haber: {latest['title']}")
 
             else:
-                log(f"Yeni haber yok. Son haber: {latest['title']}")
+                if saved_id is None:
+                    reason = "State dosyası yok veya okunamadı. Bildirim gönderiliyor."
+                else:
+                    reason = (
+                        f"State dosyasındaki haber farklı. "
+                        f"Eski ID: {saved_id}, Yeni ID: {latest['id']}. "
+                        f"Bildirim gönderiliyor."
+                    )
+
+                notify_new_news(latest, reason)
 
         except KeyboardInterrupt:
             log("\nProgram durduruldu.")
