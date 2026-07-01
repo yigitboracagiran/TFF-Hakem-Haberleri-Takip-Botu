@@ -332,16 +332,59 @@ https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
 4. JSON çıktısında grup sohbetine ait şu bölümü bulun:
 
 ```json
-"chat": {
-  "id": -1001234567890,
-  "title": "Grup Adı",
-  "type": "supergroup"
+"message": {
+  "chat": {
+    "id": -1001234567890,
+    "title": "Grup Adı",
+    "type": "supergroup"
+  }
 }
 ```
 
-Buradaki `id` değeri grup için kullanılacak `TELEGRAM_CHAT_ID` değeridir.
+Buradaki `chat.id` değeri grup için kullanılacak `TELEGRAM_CHAT_ID` değeridir.
 
 Grup chat ID değerleri genellikle `-` işaretiyle başlar. Bu değeri eksiksiz kopyalamanız gerekir.
+
+Linux / macOS:
+
+```bash
+export TELEGRAM_CHAT_ID="-1001234567890"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:TELEGRAM_CHAT_ID="-1001234567890"
+```
+
+### Kanal İçin Chat ID Alma
+
+Telegram bildiriminin bir kanala gönderilmesini istiyorsanız:
+
+1. Botu ilgili Telegram kanalına yönetici olarak ekleyin.
+2. Kanalda herhangi bir test mesajı paylaşın.
+3. Tarayıcıdan şu adresi açın:
+
+```text
+https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
+```
+
+4. JSON çıktısında kanal gönderisine ait şu bölümü bulun:
+
+```json
+"channel_post": {
+  "message_id": 2,
+  "sender_chat": {
+    "id": -1001234567890,
+    "title": "Kanal Adı",
+    "type": "channel"
+  }
+}
+```
+
+Buradaki `sender_chat.id` değeri kanal için kullanılacak `TELEGRAM_CHAT_ID` değeridir.
+
+Kanal chat ID değerleri de genellikle `-100` ile başlar. Bu değeri eksiksiz kopyalamanız gerekir.
 
 Linux / macOS:
 
@@ -371,6 +414,8 @@ Eğer tarayıcıda açtığınız `getUpdates` sonucu şu şekilde boş dönüyo
 * Botla bireysel sohbet başlatıldı mı?
 * Bota en az bir mesaj gönderildi mi?
 * Bot gruba eklendiyse grupta yeni bir mesaj yazıldı mı?
+* Bot kanala eklendiyse kanalda yeni bir test mesajı paylaşıldı mı?
+* Kanal için JSON içinde `channel_post.sender_chat.id` alanı kontrol edildi mi?
 * Doğru bot token kullanılıyor mu?
 
 Mesaj gönderdikten sonra `getUpdates` adresini tekrar yenileyin.
