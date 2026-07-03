@@ -12,6 +12,24 @@ Daha sonra yeni bir haber bulunduğunda:
 * Telegram üzerinden bildirim gönderir
 * Son görülen haber bilgisini yerel bir JSON dosyasına kaydeder
 
+## Hedef Ortam
+
+| Bileşen | Sürüm / Notlar |
+|---|---|
+| Dil | Python 3 |
+| İşletim Sistemi | Linux / macOS / Windows |
+| Paket Yöneticisi | `pip3` veya `pip` |
+| Harici Paketler | `requests`, `urllib3`, `beautifulsoup4` |
+| Bildirim Altyapısı | Telegram Bot API |
+| Ortam Değişkenleri | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` |
+| Durum Dosyası | `tff_hakem_son_haber.json` |
+| Ana Script | `haber.py` |
+
+> [!NOTE]
+> Telegram token ve chat ID bilgilerini doğrudan kaynak koda yazmayın; ortam değişkeni olarak tanımlayın.
+
+---
+
 ## Özellikler
 
 * TFF haber listesinden en güncel hakem haberini tespit eder
