@@ -30,6 +30,31 @@ Daha sonra yeni bir haber bulunduğunda:
 
 ---
 
+## İçindekiler
+
+- [Özellikler](#ozellikler)
+- [Gereksinimler](#gereksinimler)
+- [Proje Yapısı](#proje-yapisi)
+- [Değişken Açıklamaları](#degisken-aciklamalari)
+- [Telegram Bot Token ve Chat ID Alma](#telegram-bot-token-ve-chat-id-alma)
+- [BotFather ile Bot Token Alma](#botfather-ile-bot-token-alma)
+- [Bot Token Yenileme](#bot-token-yenileme)
+- [Chat ID Öğrenme](#chat-id-ogrenme)
+- [getUpdates Boş Gelirse](#getupdates-bos-gelirse)
+- [Telegram Ayarlarının Scriptte Kullanımı](#telegram-ayarlarinin-scriptte-kullanimi)
+- [Güvenlik Notu](#guvenlik-notu)
+- [Telegram Ortam Değişkenleri](#telegram-ortam-degiskenleri)
+- [Çalıştırma](#calistirma)
+- [Örnek Log Çıktısı](#ornek-log-ciktisi)
+- [Çalışma Mantığı](#calisma-mantigi)
+- [İlk Çalıştırma Davranışı](#ilk-calistirma-davranisi)
+- [Telegram Bildirimi](#telegram-bildirimi)
+- [Durum Dosyası](#durum-dosyasi)
+- [Hata Yönetimi](#hata-yonetimi)
+- [Olası Sorunlar](#olasi-sorunlar)
+
+<a id="ozellikler"></a>
+
 ## Özellikler
 
 * TFF haber listesinden en güncel hakem haberini tespit eder
@@ -40,6 +65,8 @@ Daha sonra yeni bir haber bulunduğunda:
 * Son haber ID bilgisini dosyada sakladığı için program yeniden başlatıldığında kaldığı yerden devam eder
 * Telegram bot token ve chat ID bilgilerini ortam değişkenlerinden okur
 * İlk çalıştırmada mevcut haberi yeni haber gibi bildirmez
+
+<a id="gereksinimler"></a>
 
 ## Gereksinimler
 
@@ -72,6 +99,8 @@ Kurulum için:
 pip3 install requests urllib3 beautifulsoup4
 ```
 
+<a id="proje-yapisi"></a>
+
 ## Proje Yapısı
 
 Örnek proje yapısı:
@@ -84,6 +113,8 @@ tff-hakem-haberleri/
 ```
 
 `tff_hakem_son_haber.json` dosyası script tarafından otomatik oluşturulur. İlk başta elle oluşturmanız gerekmez.
+
+<a id="degisken-aciklamalari"></a>
 
 ## Değişken Açıklamaları
 
@@ -185,6 +216,8 @@ Bu bilgi doğrudan Python dosyasına yazılmaz. Ortam değişkeninden okunur:
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 ```
 
+<a id="telegram-bot-token-ve-chat-id-alma"></a>
+
 ## Telegram Bot Token ve Chat ID Alma
 
 Telegram bildirimi gönderebilmek için iki bilgiye ihtiyaç vardır:
@@ -197,6 +230,8 @@ Telegram bildirimi gönderebilmek için iki bilgiye ihtiyaç vardır:
 `TELEGRAM_CHAT_ID`, mesajın gönderileceği kullanıcı, grup veya kanal kimliğidir.
 
 Bu bilgiler doğrudan Python dosyasına yazılmaz. Script çalıştırılmadan önce ortam değişkeni olarak tanımlanır.
+
+<a id="botfather-ile-bot-token-alma"></a>
 
 ## BotFather ile Bot Token Alma
 
@@ -250,6 +285,8 @@ $env:TELEGRAM_BOT_TOKEN="123456789:ABCDefGhIJKlmNoPQRstuVWXyz"
 
 Bot token bilgisini kimseyle paylaşmayın. Bu token, botunuz adına mesaj göndermek için kullanılabilir.
 
+<a id="bot-token-yenileme"></a>
+
 ## Bot Token Yenileme
 
 Eğer bot token bilgisini kaybettiyseniz veya token başkasının eline geçtiyse BotFather üzerinden yeni token oluşturabilirsiniz.
@@ -278,6 +315,8 @@ Windows PowerShell:
 ```powershell
 $env:TELEGRAM_BOT_TOKEN="yeni_token_buraya"
 ```
+
+<a id="chat-id-ogrenme"></a>
 
 ## Chat ID Öğrenme
 
@@ -416,6 +455,8 @@ Windows PowerShell:
 $env:TELEGRAM_CHAT_ID="-1001234567890"
 ```
 
+<a id="getupdates-bos-gelirse"></a>
+
 ## getUpdates Boş Gelirse
 
 Eğer tarayıcıda açtığınız `getUpdates` sonucu şu şekilde boş dönüyorsa:
@@ -437,6 +478,8 @@ Eğer tarayıcıda açtığınız `getUpdates` sonucu şu şekilde boş dönüyo
 * Doğru bot token kullanılıyor mu?
 
 Mesaj gönderdikten sonra `getUpdates` adresini tekrar yenileyin.
+
+<a id="telegram-ayarlarinin-scriptte-kullanimi"></a>
 
 ## Telegram Ayarlarının Scriptte Kullanımı
 
@@ -471,6 +514,8 @@ python haber.py
 
 Bu ayarlar doğru yapıldığında script yeni haber bulduğunda Telegram üzerinden bildirim gönderecektir.
 
+<a id="guvenlik-notu"></a>
+
 ## Güvenlik Notu
 
 Bot token bilgisini doğrudan Python dosyasına yazmak önerilmez.
@@ -489,6 +534,8 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 ```
 
+<a id="telegram-ortam-degiskenleri"></a>
+
 ## Telegram Ortam Değişkenleri
 
 Script Telegram bilgilerini şu iki ortam değişkeninden okur:
@@ -499,6 +546,8 @@ TELEGRAM_CHAT_ID
 ```
 
 Bu bilgileri kaynak kodun içine yazmak yerine terminalde tanımlamanız gerekir.
+
+<a id="calistirma"></a>
 
 ## Çalıştırma
 
@@ -546,6 +595,8 @@ $env:TELEGRAM_CHAT_ID="-1001234567890"
 python haber.py
 ```
 
+<a id="ornek-log-ciktisi"></a>
+
 ## Örnek Log Çıktısı
 
 Program çalıştığında konsolda şu şekilde loglar üretir:
@@ -581,6 +632,8 @@ Programı durdurmak için:
 Ctrl + C
 ```
 
+<a id="calisma-mantigi"></a>
+
 ## Çalışma Mantığı
 
 Script önce TFF haber liste sayfasını indirir.
@@ -598,6 +651,8 @@ Daha sonra ID değeri en büyük olan haber, en güncel haber olarak kabul edili
 Script tek bir sorguya güvenmek yerine aynı kontrolü `REFRESH_COUNT` kadar tekrarlar. Gelen sonuçlar arasında en çok tekrar eden haber ID değeri seçilir. Eşitlik olması durumunda ID değeri en büyük olan haber tercih edilir.
 
 Bu yöntem, sayfa geçici olarak eski veri döndürürse veya bağlantı listesi tutarsız gelirse daha güvenilir sonuç alınmasını sağlar.
+
+<a id="ilk-calistirma-davranisi"></a>
 
 ## İlk Çalıştırma Davranışı
 
@@ -653,6 +708,8 @@ elif latest["id"] != last_id:
     save_latest(latest)
 ```
 
+<a id="telegram-bildirimi"></a>
+
 ## Telegram Bildirimi
 
 Yeni haber bulunduğunda Telegram mesajı şu formatta gönderilir:
@@ -685,6 +742,8 @@ Eğer bu değerlerden biri eksikse program hata vermez, sadece konsola şu mesaj
 Telegram token veya chat_id tanımlı değil.
 ```
 
+<a id="durum-dosyasi"></a>
+
 ## Durum Dosyası
 
 Son görülen haber bilgisi JSON formatında saklanır.
@@ -709,6 +768,8 @@ Bu dosya sayesinde script yeniden başlatıldığında aynı haberi tekrar yeni 
 
 Dosya silinirse script bir sonraki çalıştırmada mevcut son haberi yeniden ilk kayıt olarak kabul eder ve bildirim göndermez.
 
+<a id="hata-yonetimi"></a>
+
 ## Hata Yönetimi
 
 Script aşağıdaki durumlarda hata mesajını konsola yazar ve çalışmaya devam eder:
@@ -726,6 +787,8 @@ Klavye ile durdurma yapılırsa program şu mesajı yazar ve kapanır:
 ```text
 Program durduruldu.
 ```
+
+<a id="olasi-sorunlar"></a>
 
 ## Olası Sorunlar
 
